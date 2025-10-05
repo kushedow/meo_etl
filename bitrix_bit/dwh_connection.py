@@ -1,7 +1,10 @@
+import logging
 import os
 import psycopg2
 from dotenv import load_dotenv
 
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('psycopg2').setLevel(logging.DEBUG)
 
 def get_pg_connection():
 

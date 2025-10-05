@@ -7,7 +7,7 @@ from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 from fast_bitrix24 import Bitrix, BitrixAsync
 
-from bitrix_bit.dwh_connection import get_pg_connection
+from dwh_connection import get_pg_connection
 
 FIELDS: dict = {
     "id": "ID",

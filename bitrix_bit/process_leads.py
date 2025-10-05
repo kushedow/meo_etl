@@ -31,7 +31,7 @@ FIELDS: dict = {
     "utm_content": "UTM_CONTENT",
     "utm_term": "UTM_TERM",
     "discount_loyalty": "UF_CRM_1683884441",
-    "ndz_count": "UF_CRM_1754512458374",
+    # "ndz_count": "UF_CRM_1754512458374",
     "created_at": "DATE_CREATE",
     "offered_at": "UF_CRM_1687463753"
 
@@ -41,13 +41,16 @@ FIELDS: dict = {
 load_dotenv("../meo.env")
 webhook: str = f"{os.getenv("HOST")}/rest/{os.getenv("USER_ID")}/{os.getenv("TOKEN")}/"
 
-bx: BitrixAsync = Bitrix(webhook, ssl=False, requests_per_second=2.0, operating_time_limit = 100)
+bx: BitrixAsync = Bitrix(webhook, ssl=False, operating_time_limit = 200)
+
+# Включаем логирование
 logging.getLogger('fast_bitrix24').addHandler(logging.StreamHandler())
+
 
 
 def rename_keys(record_raw: dict) -> dict:
     """
-    Перекладывает битриксовые ключи на понятные человеку и постгресу
+    Перекладывает битриксовые ключи на понятные человеку и постгрес
     :param rec: Словарь со старыми ключами
     :return: Словарь с новыми ключами
     """
@@ -91,17 +94,20 @@ def bulk_upsert(records, table_name, conflict_column="id"):
 async def main():
     print("Начинаем выгрузку лидов")
 
-    with bx.slow():
+    max_concurrent_requests = 1
+    with bx.slow(max_concurrent_requests):
         leads_raw = await bx.get_all(
             'crm.lead.list',
             {
                 "select": list(FIELDS.values()),
-                "filter": {">DATE_CREATE": "2024-10-03"},
+                "filter": {">DATE_CREATE": "2025-01-01"},
             })
 
     leads: list = list(map(rename_keys, leads_raw))
-    bulk_upsert(leads, "bit_crm_leads")
+    result = bulk_upsert(leads, "bit_crm_leads")
 
     print("Выгрузка завершена")
 
-asyncio.run(main())
+
+if __name__ == "__main__":
+    asyncio.run(main())
